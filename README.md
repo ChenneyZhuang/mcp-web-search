@@ -5,45 +5,24 @@
 [![CI](https://github.com/ChenneyZhuang/mcp-web-search/actions/workflows/ci.yml/badge.svg)](https://github.com/ChenneyZhuang/mcp-web-search/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ChenneyZhuang/mcp-web-search)](https://github.com/ChenneyZhuang/mcp-web-search/releases)
 
-**The lightest MCP web search server in the ecosystem.**
-Zero runtime dependencies beyond Python stdlib. No API key. No account.
-Your AI agent gets real-time web access in one command.
+**Give your AI agent real-time web access. Zero API keys. Zero dependencies. ~30 KB.**
 
----
-
-## Table of Contents
-
-- [Why This One?](#why-this-one)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Tools](#tools)
-  - [web_search](#web_search)
-  - [web_extract](#web_extract)
-  - [web_search_and_extract](#web_search_and_extract)
-- [Usage Examples](#usage-examples)
-- [How It Works](#how-it-works)
-- [Rate Limiting](#rate-limiting)
-- [FAQ](#faq)
-- [Related](#related)
-- [License](#license)
+Search DuckDuckGo, extract page content, or do both in a single call — all through the Model Context Protocol. No signup, no billing, no limits beyond DuckDuckGo's soft rate throttling.
 
 ---
 
 ## Why This One?
 
-There are several DuckDuckGo MCP servers. Here's why this one stands out:
-
 | | This Server | `duckduckgo-mcp-server` | `ddg-search` |
-|---|---|:---:|:---:|
+|---|:---:|:---:|:---:|
 | Runtime dependencies | **0** (stdlib only) | 3+ | 5+ |
 | Python version | **3.9+** | 3.11+ | 3.10+ |
-| Content extraction | ✅ markdown | ✅ plain text | ❌ |
+| Content extraction | ✅ | ✅ | ❌ |
 | Batch extract (multiple URLs) | ✅ | ❌ | ❌ |
-| Search + extract combo | ✅ single call | ❌ | ❌ |
+| Search + extract in one call | ✅ | ❌ | ❌ |
 | Install size | ~30 KB | ~2 MB | ~1.5 MB |
 
-Zero dependencies means zero supply-chain risk, zero version conflicts, and
-instant installation on any machine with Python 3.9+.
+Zero dependencies means zero supply-chain risk, instant install, and runs anywhere Python 3.9+ is available.
 
 ---
 
@@ -53,7 +32,19 @@ instant installation on any machine with Python 3.9+.
 pip install git+https://github.com/ChenneyZhuang/mcp-web-search.git
 ```
 
-No extra packages. No API keys. Works immediately.
+That's it. No extra packages. No API keys.
+
+### Docker
+
+```bash
+docker build -t mcp-web-search github.com/ChenneyZhuang/mcp-web-search
+```
+
+Or use the pre-built image:
+
+```bash
+docker run -i ghcr.io/chenneyzhuang/mcp-web-search:latest
+```
 
 ---
 
@@ -109,11 +100,13 @@ codex mcp add web-search -- python3 -m mcp_web_search.server
 
 Search DuckDuckGo and return structured results.
 
-**Parameters:**
-- `query` (str) — search query
-- `limit` (int, default 5) — max results (1–20)
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | `str` | *(required)* | Search query |
+| `limit` | `int` | `5` | Max results (1–20) |
 
 **Returns:**
+
 ```json
 [
   {
@@ -125,13 +118,14 @@ Search DuckDuckGo and return structured results.
 
 ### `web_extract`
 
-Fetch and extract readable text from web pages. Ideal for reading documentation,
-articles, or any page found via `web_search`.
+Fetch and extract readable text from one or more web pages.
 
-**Parameters:**
-- `urls` (list[str]) — one or more URLs to extract
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `urls` | `list[str]` | *(required)* | URLs to extract |
 
 **Returns:**
+
 ```json
 [
   {
@@ -142,18 +136,18 @@ articles, or any page found via `web_search`.
 ]
 ```
 
-Content is returned as **plain text** with HTML tags stripped.
+Content is returned as plain text with HTML stripped. Capped at 5,000 characters per page. Results are cached to disk — the same URL extracted twice returns instantly.
 
 ### `web_search_and_extract`
 
-Search AND extract full page content in a single call. The most efficient
-workflow for AI agents that need both discovery and deep reading.
+Search AND extract page content in a single call. The most efficient workflow for agents that need both discovery and deep reading.
 
-**Parameters:**
-- `query` (str) — search query
-- `limit` (int, default 3) — max results to search AND extract
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | `str` | *(required)* | Search query |
+| `limit` | `int` | `3` | Max results to search and extract |
 
-**Returns:** Same as `web_search`, plus a `content` field with extracted page text.
+**Returns:** Same as `web_search`, plus a `content` field with extracted page text (capped at 3,000 chars).
 
 ---
 
@@ -166,7 +160,7 @@ User: "What's new in Python 3.14?"
 Agent: calls web_search("Python 3.14 new features", limit=5)
        → finds release notes URL
 Agent: calls web_extract(["https://docs.python.org/3.14/whatsnew/3.14.html"])
-       → extracts full changelog as markdown
+       → extracts full page text
 Agent: summarizes and answers
 ```
 
@@ -175,7 +169,7 @@ Agent: summarizes and answers
 ```
 User: "How do I set up Let's Encrypt on macOS?"
 Agent: calls web_search_and_extract("Let's Encrypt macOS setup certbot", limit=3)
-       → gets search results + extracted content in one response
+       → gets search results + full page text in one response
 Agent: synthesizes answer from extracted docs
 ```
 
@@ -194,55 +188,43 @@ Agent: synthesizes answer from extracted docs
                                      └──────┬──────┘
                                             │
                                      ┌──────▼──────┐
-                                     │ Parse + fmt │
-                                     │ → markdown  │
+                                     │ Parse HTML  │
+                                     │ → plain text│
                                      └─────────────┘
 ```
 
-The server uses DuckDuckGo's HTML search endpoint (no API key, no JavaScript
-required). Results are parsed from the HTML response and formatted as structured
-objects. Content extraction uses regex-based HTML parsing — fast and dependency-free.
+The server queries DuckDuckGo's HTML search endpoint (`html.duckduckgo.com`) — no API key, no JavaScript required. Results are parsed from the raw HTML and returned as structured objects. Content extraction uses regex-based HTML stripping — fast, dependency-free, and works on any page.
 
 ---
 
 ## Rate Limiting
 
-DuckDuckGo imposes soft rate limits. If you're making many requests in quick
-succession, add a 1–2 second delay between calls. The server does not
-auto-throttle — your agent is responsible for pacing.
+DuckDuckGo imposes soft rate limits. For many requests in quick succession, add a 1–2 second delay between calls. The server does not auto-throttle — your agent is responsible for pacing.
 
-For heavy usage, consider DuckDuckGo's [Instant Answer API](https://duckduckgo.com/api)
-(rate-limited but documented) or a paid search API.
+For heavy usage, consider [DuckDuckGo's Instant Answer API](https://duckduckgo.com/api) or a paid search API.
 
 ---
 
 ## FAQ
 
 **Does this use the official DuckDuckGo API?**
-No. It parses the HTML search results page, similar to how a browser would
-render them. This means it works without an API key but is subject to HTML
-structure changes.
+No. It parses the HTML search results page. Works without an API key but is subject to HTML structure changes.
 
 **Is this legal?**
-DuckDuckGo's robots.txt allows automated access at reasonable rates.
-This server is designed for AI agent research workflows, not high-volume
-scraping. Respect the service.
+DuckDuckGo's robots.txt allows automated access at reasonable rates. Designed for AI agent research workflows, not high-volume scraping.
 
 **What if a page blocks extraction?**
-Some sites block automated access. The server returns `[获取失败: HTTP 403]`
-or similar error messages. Your agent should handle these gracefully.
+The server returns an error message like `[获取失败: HTTP 403]` — your agent should handle these gracefully.
 
 **Can I use a proxy?**
-Not built-in. If you need proxy support, set the `HTTP_PROXY` / `HTTPS_PROXY`
-environment variables — Python's `urllib` respects them automatically.
+Set `HTTP_PROXY` / `HTTPS_PROXY` environment variables — Python's `urllib` respects them automatically.
 
 ---
 
 ## Related
 
-- [web-search](https://github.com/ChenneyZhuang/web-search) — the underlying zero-dependency search library
+- [web-search](https://github.com/ChenneyZhuang/web-search) — the underlying zero-dependency search library (CLI + Python API)
 - [Model Context Protocol](https://modelcontextprotocol.io) — MCP specification
-- [duckduckgo-mcp-server](https://github.com/nickclyde/duckduckgo-mcp-server) — alternative with more features but heavier dependencies
 
 ## License
 
