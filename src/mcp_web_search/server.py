@@ -8,14 +8,14 @@ mcp = FastMCP("Web Search")
 
 @mcp.tool()
 def web_search(query: str, limit: int = 5) -> list[dict]:
-    """Search the web via DuckDuckGo. Returns titles, URLs, and descriptions.
+    """Search the web via DuckDuckGo. Returns titles and URLs.
 
     Use this when you need to find current information, facts, or references.
     No API key required.
     """
     results = search(query, limit=limit)
     return [
-        {"title": r.title, "url": r.url, "description": r.description}
+        {"title": r["title"], "url": r["url"]}
         for r in results
     ]
 
@@ -24,19 +24,18 @@ def web_search(query: str, limit: int = 5) -> list[dict]:
 def web_extract(urls: list[str]) -> list[dict]:
     """Extract readable text content from web pages.
 
-    Returns markdown-formatted content for each URL.
+    Returns text content for each URL (capped at 5000 chars).
     Use after web_search to read the full content of a page.
     """
-    results = extract(urls)
-    return [
-        {
-            "url": r.url,
-            "title": r.title,
-            "content": r.content[:5000],  # cap for LLM context
-            "content_length": len(r.content),
-        }
-        for r in results
-    ]
+    results = []
+    for url in urls:
+        content = extract(url, max_chars=5000)
+        results.append({
+            "url": url,
+            "content": content,
+            "content_length": len(content),
+        })
+    return results
 
 
 @mcp.tool()
@@ -48,10 +47,9 @@ def web_search_and_extract(query: str, limit: int = 3) -> list[dict]:
     results = search_and_extract(query, limit=limit)
     return [
         {
-            "title": r.title,
-            "url": r.url,
-            "description": r.description,
-            "content": r.content[:3000] if r.content else "",
+            "title": r.get("title", ""),
+            "url": r.get("url", ""),
+            "content": r.get("content", "")[:3000],
         }
         for r in results
     ]
