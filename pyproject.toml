@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-web-search"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for DuckDuckGo web search — zero dependencies, no API key required"
 readme = "README.md"
 license = {text = "MIT"}
