@@ -118,8 +118,7 @@ Search DuckDuckGo and return structured results.
 [
   {
     "title": "Python (programming language) - Wikipedia",
-    "url": "https://en.wikipedia.org/wiki/Python_(programming_language)",
-    "description": "Python is a high-level, general-purpose programming language..."
+    "url": "https://en.wikipedia.org/wiki/Python_(programming_language)"
   }
 ]
 ```
@@ -137,16 +136,13 @@ articles, or any page found via `web_search`.
 [
   {
     "url": "https://example.com",
-    "title": "Example Domain",
-    "content": "## Example Domain\n\nThis domain is for use in illustrative examples...",
+    "content": "This domain is for use in illustrative examples...",
     "content_length": 1234
   }
 ]
 ```
 
-Content is returned as **markdown** — headings, lists, and links are preserved
-for LLM readability. Content is capped at 5000 characters per page to stay
-within typical context windows.
+Content is returned as **plain text** with HTML tags stripped.
 
 ### `web_search_and_extract`
 
@@ -157,7 +153,7 @@ workflow for AI agents that need both discovery and deep reading.
 - `query` (str) — search query
 - `limit` (int, default 3) — max results to search AND extract
 
-**Returns:** Same as `web_search`, plus a `content` field with extracted markdown.
+**Returns:** Same as `web_search`, plus a `content` field with extracted page text.
 
 ---
 
