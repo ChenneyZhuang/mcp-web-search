@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-web-search"
+version = "0.1.0"
+description = "MCP server for DuckDuckGo web search — zero dependencies, no API key required"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [{name = "Chenney Zhuang", email = "dev@example.com"}]
+keywords = ["mcp", "search", "duckduckgo", "web", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "mcp>=1.2",
+    "web-search @ git+https://github.com/ChenneyZhuang/web-search.git",
+]
+
+[project.scripts]
+mcp-web-search = "mcp_web_search.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
