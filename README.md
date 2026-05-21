@@ -3,6 +3,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/ChenneyZhuang/mcp-web-search/actions/workflows/ci.yml/badge.svg)](https://github.com/ChenneyZhuang/mcp-web-search/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ChenneyZhuang/mcp-web-search)](https://github.com/ChenneyZhuang/mcp-web-search/releases)
 
 **The lightest MCP web search server in the ecosystem.**
 Zero runtime dependencies beyond Python stdlib. No API key. No account.
